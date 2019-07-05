@@ -45,51 +45,53 @@ addons: &clang7
 matrix:
   include:
       # Test default gcc on Ubuntu trusty
-    - env:
-      - USE_XTENSOR=False
-      os: linux
-      dist: trusty
-      addons:
-        apt:
-          packages:
-          - libboost-all-dev
-          - libeigen3-dev
-          - libhdf5-serial-dev
-          - ninja-build
+    # - env:
+    #   - USE_XTENSOR=False
+    #   os: linux
+    #   dist: trusty
+    #   addons:
+    #     apt:
+    #       packages:
+    #       - libboost-all-dev
+    #       - libeigen3-dev
+    #       - libhdf5-serial-dev
+    #       - ninja-build
       # Test gcc-7
-    - env:
-      - GCC_VERSION=7
-      - USE_XTENSOR=True
-      os: linux
-      dist: xenial
-      addons: *gcc7
+    # - env:
+    #   - GCC_VERSION=7
+    #   - USE_XTENSOR=True
+    #   os: linux
+    #   dist: xenial
+    #   addons: *gcc7
 
       # Test clang-6.0
-    - env:
-      - CLANG_VERSION=6.0
-      os: linux
-      dist: xenial
-      addons: *clang6
+    # - env:
+    #   - CLANG_VERSION=6.0
+    #   os: linux
+    #   dist: xenial
+    #   addons: *clang6
 
       # Test clang-7
-    - env:
-      - CLANG_VERSION=7
-      - USE_XTENSOR=True
-      os: linux
-      dist: xenial
-      addons: *clang7
+    # - env:
+    #   - CLANG_VERSION=7
+    #   - USE_XTENSOR=True
+    #   os: linux
+    #   dist: xenial
+    #   addons: *clang7
 
       # osx
-    - env: USE_XTENSOR=True
-      os: osx
-      osx_image: xcode10
-      addons:
-        homebrew:
-          packages:
-          - boost
-          - hdf5
-          - eigen
-          - ninja
+    # - env: USE_XTENSOR=True
+    #   os: osx
+    #   osx_image: xcode10
+    #   addons:
+    #     homebrew:
+    #       packages:
+    #       - boost
+    #       - hdf5
+    #       - eigen
+    #       - ninja
+    - os: windows
+      env: USE_XTENSOR=False
 
 env:
   global:
@@ -103,11 +105,17 @@ install:
     elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       MINCONDA_OS=$MINCONDA_OSX;
     fi
-  - wget "http://repo.continuum.io/miniconda/Miniconda3-$MINCONDA_VERSION-$MINCONDA_OS.sh" -O miniconda.sh;
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH="$HOME/miniconda/bin:${PATH}"
-  - export INCLUDE_PATH="$HOME/miniconda/include:${INCLUDE_PATH}"
-  - hash -r
+  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
+      choco install miniconda3;
+      find "C:\Tools\miniconda3"
+      export PATH="C:\Tools\miniconda3";
+    else
+      wget "http://repo.continuum.io/miniconda/Miniconda3-$MINCONDA_VERSION-$MINCONDA_OS.sh" -O miniconda.sh;
+      bash miniconda.sh -b -p $HOME/miniconda ;
+      export PATH="$HOME/miniconda/bin:${PATH}" ;
+      export INCLUDE_PATH="$HOME/miniconda/include:${INCLUDE_PATH}" ;
+      hash -r ;
+    fi
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda install cmake -c conda-forge
@@ -115,6 +123,9 @@ install:
   - conda install xsimd -c QuantStack
   - conda install xtensor -c QuantStack
   - conda install nlohmann_json -c QuantStack
+  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
+      conda install -c anaconda hdf5;
+    fi
 
 before_script:
   - if [ -n "$GCC_VERSION" ]; then export CXX="g++-${GCC_VERSION}" CC="gcc-${GCC_VERSION}"; fi
@@ -131,7 +142,6 @@ script:
   - >
     cmake --warn-uninitialized
     -DUSE_EIGEN:BOOL=ON
-    -DEigen3_DIR=/usr/lib/cmake/eigen3
     -DUSE_XTENSOR:BOOL=${USE_XTENSOR}
     -G Ninja ../
   - ninja -v
