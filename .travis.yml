@@ -104,6 +104,7 @@ install:
       MINCONDA_OS=$MINCONDA_LINUX;
     elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       MINCONDA_OS=$MINCONDA_OSX;
+    fi
 
   - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then
       choco install miniconda3; find "C:\Tools\miniconda3" ; export PATH="C:\Tools\miniconda3";
